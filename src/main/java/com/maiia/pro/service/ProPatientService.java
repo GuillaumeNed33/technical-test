@@ -13,7 +13,7 @@ public class ProPatientService {
     private PatientRepository patientRepository;
 
     public Patient find(String patientId) {
-        return patientRepository.findById(patientId).orElseThrow();
+        return patientRepository.findById(Integer.parseInt(patientId));
     }
 
     public List<Patient> findAll() {

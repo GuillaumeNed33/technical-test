@@ -13,7 +13,7 @@ public class ProPractitionerService {
     private PractitionerRepository practitionerRepository;
 
     public Practitioner find(String practitionerId) {
-        return practitionerRepository.findById(practitionerId).orElseThrow();
+        return practitionerRepository.findById(Integer.parseInt(practitionerId));
     }
 
     public List<Practitioner> findAll() {

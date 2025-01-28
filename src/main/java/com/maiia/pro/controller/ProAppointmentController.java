@@ -1,6 +1,8 @@
 package com.maiia.pro.controller;
 
+import com.maiia.pro.dto.AppointmentDto;
 import com.maiia.pro.entity.Appointment;
+import com.maiia.pro.dto.AppointmentCreateDto;
 import com.maiia.pro.service.ProAppointmentService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,5 +28,11 @@ public class ProAppointmentController {
     @GetMapping
     public List<Appointment> getAppointments() {
         return proAppointmentService.findAll();
+    }
+
+    @ApiOperation(value = "Create new appointment")
+    @PostMapping
+    public AppointmentDto createAppointment(@RequestBody AppointmentCreateDto appointment) throws Exception {
+        return this.proAppointmentService.createAppointment(appointment);
     }
 }
