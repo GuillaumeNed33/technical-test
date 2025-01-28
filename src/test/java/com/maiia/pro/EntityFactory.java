@@ -2,6 +2,7 @@ package com.maiia.pro;
 
 import com.github.javafaker.Faker;
 import com.maiia.pro.entity.Appointment;
+import com.maiia.pro.entity.Patient;
 import com.maiia.pro.entity.Practitioner;
 import com.maiia.pro.entity.TimeSlot;
 
@@ -13,6 +14,13 @@ public class EntityFactory {
 
     public Practitioner createPractitioner() {
         return Practitioner.builder()
+                .firstName(faker.name().firstName())
+                .lastName(faker.name().lastName())
+                .build();
+    }
+
+    public Patient createPatient() {
+        return Patient.builder()
                 .firstName(faker.name().firstName())
                 .lastName(faker.name().lastName())
                 .build();
