@@ -6,6 +6,7 @@ import com.maiia.pro.entity.TimeSlot;
 import com.maiia.pro.repository.AppointmentRepository;
 import com.maiia.pro.repository.AvailabilityRepository;
 import com.maiia.pro.repository.TimeSlotRepository;
+import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProAvailabilityService {
@@ -100,8 +102,8 @@ public class ProAvailabilityService {
     // TODO optimisation : refactoriser hasAppointmentInThisSlot et hasOverlapAvailability
     // meme code pour 2 types d'objets
     private Appointment hasAppointmentInThisSlot(List<Appointment> appointments,
-                                             LocalDateTime startDateNewAvailability,
-                                             LocalDateTime endDateNewAvailability) {
+                                                 LocalDateTime startDateNewAvailability,
+                                                 LocalDateTime endDateNewAvailability) {
 
         if(startDateNewAvailability.isAfter(endDateNewAvailability)) {
             throw new IllegalArgumentException("startDate is after endDate");
@@ -128,10 +130,25 @@ public class ProAvailabilityService {
 
         for(Availability availability : existingAvailabilities) {
             if (!(!availability.getEndDate().isAfter(startDateNewAvailability) ||
-                   !availability.getStartDate().isBefore(endDateNewAvailability))) {
+                    !availability.getStartDate().isBefore(endDateNewAvailability))) {
                 return availability;
             }
         }
         return null;
+    }
+
+    public void removeAvailibility(int practitionerId, LocalDateTime startDate, LocalDateTime endDate) throws NotFoundException {
+        List<Availability> practitionerAvailabilities = this.findByPractitionerId(practitionerId)
+                .stream().filter(
+                        availability ->
+                                availability.getStartDate().equals(startDate)
+                                        && availability.getEndDate().equals(endDate)
+                ).collect(Collectors.toList());
+
+        if(practitionerAvailabilities.isEmpty()) {
+            throw new NotFoundException("Availability not found");
+        }
+
+        this.availabilityRepository.delete(practitionerAvailabilities.get(0));
     }
 }

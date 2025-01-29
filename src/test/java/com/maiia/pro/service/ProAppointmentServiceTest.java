@@ -3,11 +3,10 @@ package com.maiia.pro.service;
 import com.maiia.pro.EntityFactory;
 import com.maiia.pro.dto.AppointmentCreateDto;
 import com.maiia.pro.dto.AppointmentDto;
+import com.maiia.pro.entity.Availability;
 import com.maiia.pro.entity.Patient;
 import com.maiia.pro.entity.Practitioner;
-import com.maiia.pro.repository.AppointmentRepository;
-import com.maiia.pro.repository.PatientRepository;
-import com.maiia.pro.repository.PractitionerRepository;
+import com.maiia.pro.repository.*;
 import javassist.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +15,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,6 +27,12 @@ class ProAppointmentServiceTest {
 
     @Autowired
     private ProAppointmentService proAppointmentService;
+
+    @Autowired
+    private ProAvailabilityService proAvailabilityService;
+
+    @Autowired
+    private TimeSlotRepository timeSlotRepository;
 
     @Autowired
     private AppointmentRepository appointmentRepository;
@@ -48,10 +56,30 @@ class ProAppointmentServiceTest {
     @Test
     void createAppointment() throws Exception {
         LocalDateTime startDate = LocalDateTime.of(2020, Month.FEBRUARY, 5, 11, 0, 0);
-        AppointmentCreateDto payload = new AppointmentCreateDto(practitioner.getId().toString(), patient.getId().toString(), startDate, startDate.plusMinutes(15));
+        timeSlotRepository.save(entityFactory.createTimeSlot(practitioner.getId(), startDate, startDate.plusHours(1)));
 
+        List<Availability> availabilities = proAvailabilityService.generateAvailabilities(practitioner.getId());
+        assertEquals(4, availabilities.size());
+        List<LocalDateTime> availabilitiesStartDate = availabilities.stream().map(Availability::getStartDate).collect(Collectors.toList());
+        ArrayList<LocalDateTime> expectedStartDate = new ArrayList<>();
+        expectedStartDate.add(startDate);
+        expectedStartDate.add(startDate.plusMinutes(15));
+        expectedStartDate.add(startDate.plusMinutes(30));
+        expectedStartDate.add(startDate.plusMinutes(45));
+        assertTrue(availabilitiesStartDate.containsAll(expectedStartDate));
+
+        AppointmentCreateDto payload = new AppointmentCreateDto(practitioner.getId().toString(), patient.getId().toString(), startDate, startDate.plusMinutes(15));
         AppointmentDto appointmentDto = proAppointmentService.createAppointment(payload);
         assertNotNull(appointmentDto);
+
+        List<Availability> newAvailabilities = this.proAvailabilityService.findByPractitionerId(practitioner.getId());
+        assertEquals(3, newAvailabilities.size());
+        List<LocalDateTime> newAvailabilitiesStartDate = availabilities.stream().map(Availability::getStartDate).collect(Collectors.toList());
+        ArrayList<LocalDateTime> newExpectedStartDate = new ArrayList<>();
+        newExpectedStartDate.add(startDate.plusMinutes(15));
+        newExpectedStartDate.add(startDate.plusMinutes(30));
+        newExpectedStartDate.add(startDate.plusMinutes(45));
+        assertTrue(newAvailabilitiesStartDate.containsAll(newExpectedStartDate));
     }
 
     @Test

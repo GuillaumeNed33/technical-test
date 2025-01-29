@@ -19,6 +19,9 @@ public class ProAppointmentService {
     ProPractitionerService proPractitionerService;
 
     @Autowired
+    ProAvailabilityService proAvailabilityService;
+
+    @Autowired
     ProPatientService proPatientService;
 
     public Appointment find(String appointmentId) {
@@ -76,6 +79,12 @@ public class ProAppointmentService {
                         .endDate(appointmentCreateDto.getEndDate())
                         .build()
                 );
+
+        this.proAvailabilityService.removeAvailibility(
+                Integer.parseInt(appointmentCreateDto.getPractitionerId()),
+                appointmentCreateDto.getStartDate(),
+                appointmentCreateDto.getEndDate()
+        );
 
         return this.toDTO(appointment);
     }
